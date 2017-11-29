@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>3D Tetris</title>
+      <meta charset="utf-8">
+      <link rel="stylesheet" type="text/css" href="style.css" />
+   </head>
+   <body onload="main()">
+      <canvas id="webgl">
+         Please use a browser that supports "canvas".
+      </canvas>
+      <p>Left Arrow | Move Piece Left</p>
+      <p>Right Arrow | Move Piece Right</p>
+      <p>Down Arrow | Move Piece Down</p>
+      <p>Q | Rotate Piece Clockwise</p>
+      <p>W | Rotate Piece Counterclockwise</p>
+      <script src="libs/webgl-utils.js"></script>
+      <script src="libs/webgl-debug.js"></script>
+      <script src="libs/cuon-utils.js"></script>
+      <script src="libs/cuon-matrix.js"></script>
+      <script src="js/point.js"></script>
+      <script src="js/color.js"></script>
+      <script src="js/cylindrical_block.js"></script>
+      <script src="js/tetrominos.js"></script>
+      <script src="js/block_matrix.js"></script>
+      <script src="js/script.js"></script>
+   </body>
+</html>
