@@ -76,6 +76,11 @@ function main() {
    // Retrieve <canvas> element
    var canvas = document.getElementById('webgl');
 
+   // Set the canvas width and height to match the size specified in style.css
+   // so the graphics are not blurry.
+   canvas.width = 600;
+   canvas.height = 600;
+
    // Get the rendering context for WebGL
    Graphics.gl = getWebGLContext(canvas);
    if (!Graphics.gl) {
