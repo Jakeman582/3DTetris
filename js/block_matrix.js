@@ -21,7 +21,7 @@ var BlockGeometry = {
    width: 2.0,
    blockLength: Math.PI / 5.0,
    height: 1.0,
-   meshSize: 8,
+   meshSize: 4,
    normalization: 1.0
 };
 
@@ -54,7 +54,13 @@ function BlockMatrix() {
    this.fieldCoordinates = [];
    this.fieldColors = [];
    this.fieldIndices = [];
-   
+
+   // Data to draw a grid
+   var innerRadius = BlockGeometry.startRadius + BlockGeometry.width;
+   var outerRadius = innerRadius + 1.0;
+   var startHeight = -14.0;
+   this.gameGrid = new GameGrid(BlockField.width, BlockField.height - 4, innerRadius, outerRadius, BlockGeometry.blockLength, BlockGeometry.height, startHeight, BlockGeometry.meshSize);
+
    // Insert blocks into this BlockMatrix.
    var rowIndex = 0;
    var columnIndex = 0;
@@ -166,6 +172,31 @@ BlockMatrix.prototype.drawField = function(gl) {
          }
       }
    }
+
+   // Draw the game grid
+   vertices = this.gameGrid.getWebGLCoordinates();
+   colors = this.gameGrid.getWebGLColors();
+   indices = this.gameGrid.getWebGLIndices();
+
+   fVertexSize = vertices.BYTES_PER_ELEMENT;
+   fColorSize = colors.BYTES_PER_ELEMENT;
+
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+   gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, fVertexSize * 3, 0);
+   gl.enableVertexAttribArray(a_Position);
+
+   gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+
+   gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, fColorSize * 4, 0);
+   gl.enableVertexAttribArray(a_Color);
+
+   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+   gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
 }
 
 BlockMatrix.prototype.setBlock = function(row, column, blockType) {
