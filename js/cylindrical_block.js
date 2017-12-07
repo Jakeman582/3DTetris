@@ -67,6 +67,16 @@ function CylindricalBlock(startRadius = 0.0, width = 0.0, startAngle = 0.0, bloc
    // (meshSize + 1) points.
    this.pointsPerRoundedFace = 2 * (this.meshSize + 1);
    this.numberOfPoints = 2 * this.pointsPerRoundedFace;
+   this.cornerPoints = [
+      0,
+      1,
+      this.meshSize * 2,
+      this.meshSize * 2 + 1,
+      this.pointsPerRoundedFace,
+      this.pointsPerRoundedFace + 1,
+      this.pointsPerRoundedFace + (this.meshSize * 2),
+      this.pointsPerRoundedFace + (this.meshSize * 2) + 1
+   ];
 
    // Create an array containing the points used to
    // describe this block and the indices used to 
@@ -229,5 +239,15 @@ CylindricalBlock.prototype.setColor = function(newColor) {
       this.colors.push(newColor.getGreen());
       this.colors.push(newColor.getBlue());
       this.colors.push(newColor.getAlpha());
+   }
+}
+
+CylindricalBlock.prototype.setCornerColors = function(newColor) {
+   var index = 0;
+   for(index of this.cornerPoints) {
+      this.colors[4 * index + 0] = newColor.getRed();
+      this.colors[4 * index + 1] = newColor.getGreen();
+      this.colors[4 * index + 2] = newColor.getBlue();
+      this.colors[4 * index + 3] = newColor.getAlpha();
    }
 }

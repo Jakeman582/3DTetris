@@ -59,7 +59,7 @@ function BlockMatrix() {
    var innerRadius = BlockGeometry.startRadius + BlockGeometry.width;
    var outerRadius = innerRadius + 1.0;
    var startHeight = -14.0;
-   this.gameGrid = new GameGrid(BlockField.width, BlockField.height - 4, innerRadius, outerRadius, BlockGeometry.blockLength, BlockGeometry.height, startHeight, BlockGeometry.meshSize);
+   this.gameGrid = new GameGrid(BlockField.width, BlockField.height - 4, innerRadius + 0.01, outerRadius, BlockGeometry.blockLength, BlockGeometry.height, startHeight, BlockGeometry.meshSize);
 
    // Insert blocks into this BlockMatrix.
    var rowIndex = 0;
@@ -227,6 +227,7 @@ BlockMatrix.prototype.setBlock = function(row, column, blockType) {
          this.fieldBlocks[row][column].setColor(BlockColors.noBlock);
          break;
    }
+   //this.fieldBlocks[row][column].setCornerColors(new Color(0.0, 0.0, 0.0, 1.0));
 }
 
 BlockMatrix.prototype.getBlockType = function(row, column) {
