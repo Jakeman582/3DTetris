@@ -23,6 +23,11 @@ var Graphics = {
    gl: null
 };
 
+var DomElement = {
+   scoreText: document.getElementById('scoreText'),
+   lineText: document.getElementById('lineText')
+};
+
 var Camera = {
    eyeX: 0,
    eyeY: -30,
@@ -42,7 +47,9 @@ var GameData = {
    angle: Math.PI / 5.0,
    forbiddenRow: 3,
    activePiece: null,
-   lastTime: 0
+   lastTime: 0,
+   score: 0,
+   lines: 0
 };
 
 var Piece = {
@@ -75,6 +82,10 @@ var Keyboard = {
 function main() {
    // Retrieve <canvas> element
    var canvas = document.getElementById('webgl');
+
+   // Initialize score and lines cleared text
+   DomElement.scoreText.innerHTML = "" + GameData.score;
+   DomElement.lineText.innerHTML = "" + GameData.lines;
 
    // Set the canvas width and height to match the size specified in style.css
    // so the graphics are not blurry.
@@ -171,8 +182,6 @@ function keyDown(e, gl, u_MvpMatrix) {
       if(canRotateCounterClockwise()) {
          rotateCounterClockwise();
       }
-   }else if(e.keyCode === Keyboard.SPACE) {
-      //setPiece();
    }
 
    GameData.mainPlayField.drawField(gl);
@@ -447,10 +456,18 @@ function clearCompleteRows() {
       droppedRows++;
    }
 
-   for(rowIndex = 0; rowIndex <= GameData.forbiddenRow; rowIndex++) {
-      for(columnIndex = 0; columnIndex < GameData.mainPlayField.getFieldWidth(); columnIndex++) {
-         GameData.mainPlayField.setBlock(rowIndex, columnIndex, 0);
+   // Clear the top row, if there were any rows to drop
+   if(completeRows.length > 0) {
+      for(rowIndex = 0; rowIndex <= GameData.forbiddenRow; rowIndex++) {
+         for(columnIndex = 0; columnIndex < GameData.mainPlayField.getFieldWidth(); columnIndex++) {
+            GameData.mainPlayField.setBlock(rowIndex, columnIndex, 0);
+         }
       }
+   }
+
+   // If there were any cleared rows, then update the score
+   if(completeRows.length > 0) {
+      increaseScore(completeRows.length)
    }
 }
 
@@ -465,6 +482,13 @@ function inForbiddenZone() {
       }
    }
    return false;
+}
+
+function increaseScore(numberOfRows) {
+   GameData.lines += numberOfRows;
+   GameData.score += Math.pow(2, numberOfRows - 1);
+   DomElement.scoreText.innerHTML = "" + GameData.score;
+   DomElement.lineText.innerHTML = "" + GameData.lines;
 }
 
 function incrementColumn() {

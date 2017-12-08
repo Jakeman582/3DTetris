@@ -227,7 +227,6 @@ BlockMatrix.prototype.setBlock = function(row, column, blockType) {
          this.fieldBlocks[row][column].setColor(BlockColors.noBlock);
          break;
    }
-   //this.fieldBlocks[row][column].setCornerColors(new Color(0.0, 0.0, 0.0, 1.0));
 }
 
 BlockMatrix.prototype.getBlockType = function(row, column) {
