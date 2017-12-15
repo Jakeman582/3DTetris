@@ -23,11 +23,19 @@ var Graphics = {
    gl: null
 };
 
+/*
+ * This container allows easy modification
+ * of Dom elements
+ */
 var DomElement = {
    scoreText: document.getElementById('scoreText'),
    lineText: document.getElementById('lineText')
 };
 
+/*
+ * This container makes it easy to
+ * manipulate the camera as needed
+ */
 var Camera = {
    eyeX: 0,
    eyeY: -30,
@@ -40,6 +48,10 @@ var Camera = {
    upZ: 40
 };
 
+/*
+ * This container makes it easier to access
+ * game data and allows for easy updates
+ */
 var GameData = {                                                               
    mainPlayField: new BlockMatrix(),
    column: 7,
@@ -48,10 +60,17 @@ var GameData = {
    forbiddenRow: 3,
    activePiece: null,
    lastTime: 0,
+   isPaused: false,
    score: 0,
    lines: 0
 };
 
+/*
+ * Having a container for all pieces
+ * negates the need to continuosly
+ * construct new pieces every time a
+ * new piece needs to be generated
+ */
 var Piece = {
    I: new IBlock(),
    T: new TBlock(),
@@ -62,6 +81,12 @@ var Piece = {
    O: new OBlock()
 };
 
+/*
+ * Having a container for all matrices will
+ * make modifying individual matrices easier
+ * for when the data needs to be uploaded to
+ * the GPU
+ */
 var RenderMatrix = {
    modelMatrix: new Matrix4(),
    viewMatrix: new Matrix4(),
@@ -69,6 +94,10 @@ var RenderMatrix = {
    mvpMatrix: new Matrix4()
 };
 
+/* Having a container for key codes makes it easier
+ * to determine what key is being tested for when
+ * handling a keyDown event
+ */
 var Keyboard = {
    RIGHT: 39,
    LEFT: 37,
@@ -76,7 +105,8 @@ var Keyboard = {
    UP: 38,
    SPACE: 32,
    Q: 81,
-   W: 87
+   W: 87,
+   P: 80
 };
 
 function main() {
@@ -131,9 +161,6 @@ function main() {
       GameData.mainPlayField.drawField(Graphics.gl);
    }
 
-   // Draw the tetris play field.
-   GameData.mainPlayField.drawField(Graphics.gl);
-
    // Generate a game piece
    GameData.activePiece = generatePiece();
 
@@ -147,15 +174,23 @@ function main() {
       );
    }
 
+   // Draw the playfield
    GameData.mainPlayField.drawField(Graphics.gl);
 
+   // Start the animation
    requestAnimationFrame(playGame);
 }
 
-// Still need to handle all appropriate keys
+/*
+ * Handle any appropriate keys that
+ * affect gameplay
+ */
 function keyDown(e, gl, u_MvpMatrix) {
    if(e.keyCode === Keyboard.RIGHT) {
       if(canMoveRight()) {
+         // Since we want to rotate the camera, we
+         // need to update the camera and the data
+         // on the GPU
          rotateZAxis(GameData.angle);
          RenderMatrix.viewMatrix.setLookAt(Camera.eyeX, Camera.eyeY, Camera.eyeZ, Camera.lookX, Camera.lookY, Camera.lookZ, Camera.upX, Camera.upY, Camera.upZ);
          RenderMatrix.mvpMatrix.set(RenderMatrix.projectionMatrix).multiply(RenderMatrix.viewMatrix).multiply(RenderMatrix.modelMatrix);
@@ -164,6 +199,9 @@ function keyDown(e, gl, u_MvpMatrix) {
       }
    }else if(e.keyCode === Keyboard.LEFT) {
       if(canMoveLeft()) {
+         // Since we want to rotate the camera, we
+         // need to update the camera and the data
+         // on the GPU
          rotateZAxis(-1.0 * GameData.angle);
          RenderMatrix.viewMatrix.setLookAt(Camera.eyeX, Camera.eyeY, Camera.eyeZ, Camera.lookX, Camera.lookY, Camera.lookZ, Camera.upX, Camera.upY, Camera.upZ);
          RenderMatrix.mvpMatrix.set(RenderMatrix.projectionMatrix).multiply(RenderMatrix.viewMatrix).multiply(RenderMatrix.modelMatrix);
@@ -182,12 +220,25 @@ function keyDown(e, gl, u_MvpMatrix) {
       if(canRotateCounterClockwise()) {
          rotateCounterClockwise();
       }
+   }else if(e.keyCode === Keyboard.P) {
+      GameData.isPaused = !GameData.isPaused;
    }
 
+   // We need to redraw after every keyDown
+   // because almost all keyDown events update
+   // the playfield
    GameData.mainPlayField.drawField(gl);
-
 }
 
+/*
+ * Purpose: Determine if the current peice can be
+ *          moved to the left (no blocking blocks).
+ *
+ * Parameters: None
+ * 
+ * Returns: A boolean value determining if the current
+ *          can be moved to the left.
+ */
 function canMoveLeft() {
    var grid = null;
    var checkRow = 0;
@@ -202,6 +253,15 @@ function canMoveLeft() {
    return true;
 }
 
+/*
+ * Purpose: Determine if the current peice can be
+ *          moved to the right (no blocking blocks).
+ *
+ * Parameters: None
+ * 
+ * Returns: A boolean value determining if the current
+ *          can be moved to the right.
+ */
 function canMoveRight() {
    var grid = null;
    var checkRow = 0;
@@ -216,6 +276,16 @@ function canMoveRight() {
    return true;
 }
 
+/*
+ * Purpose: Determine if the current peice can be
+ *          moved down (no blocking blocks and not
+ *          at the bottom of the playfield).
+ *
+ * Parameters: None
+ * 
+ * Returns: A boolean value determining if the current
+ *          can be moved down.
+ */
 function canMoveDown() {
    var grid = null;
    var checkRow = 0;
@@ -233,6 +303,15 @@ function canMoveDown() {
    return true;
 }
 
+/*
+ * Purpose: Determine if the current peice can be
+ *          rotated clockwise (no blocking blocks).
+ *
+ * Parameters: None
+ * 
+ * Returns: A boolean value determining if the current
+ *          can be rotated clockwise.
+ */
 function canRotateClockwise() {
    var grid = null;
    var checkRow = 0;
@@ -250,6 +329,15 @@ function canRotateClockwise() {
    return true;
 }
 
+/*
+ * Purpose: Determine if the current peice can be
+ *          rotated counter-clockwise (no blocking blocks).
+ *
+ * Parameters: None
+ * 
+ * Returns: A boolean value determining if the current
+ *          can be rotated counter-clockwise.
+ */
 function canRotateCounterClockwise() {
    var grid = null;
    var checkRow = 0;
@@ -267,6 +355,15 @@ function canRotateCounterClockwise() {
    return true;
 }
 
+/*
+ * Purpose: Shift all blocks in the current piece
+ *          one unit to the left (wrap around the
+ *          playfield as necessary).
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function moveLeft() {
    var grid = null;
    for(grid of GameData.activePiece.getOrientation()) {
@@ -289,6 +386,15 @@ function moveLeft() {
    }
 }
 
+/*
+ * Purpose: Shift all blocks in the current piece
+ *          one unit to the right (wrap around the
+ *          playfield as necessary).
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function moveRight() {
    var grid = null;
    for(grid of GameData.activePiece.getOrientation()) {
@@ -311,6 +417,14 @@ function moveRight() {
    }
 }
 
+/*
+ * Purpose: Shift all blocks in the current piece
+ *          one unit down.
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function moveDown() {
    var grid = null;
    for(grid of GameData.activePiece.getOrientation()) {
@@ -333,6 +447,15 @@ function moveDown() {
    }
 }
 
+/*
+ * Purpose: Shift all blocks in the current piece
+ *          to their rotated positions (wrap around the
+ *          playfield as necessary).
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function rotateClockwise() {
    var grid = null;
    for(grid of GameData.activePiece.getOrientation()) {
@@ -355,6 +478,15 @@ function rotateClockwise() {
    }
 }
 
+/*
+ * Purpose: Shift all blocks in the current piece
+ *          to their rotated positions (wrap around the
+ *          playfield as necessary).
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function rotateCounterClockwise() {
    var grid = null;
    for(grid of GameData.activePiece.getOrientation()) {
@@ -377,8 +509,22 @@ function rotateCounterClockwise() {
    }
 }
 
+/*
+ * Purpose: Clear rows and update the user's score
+ *          and generate a new piece when the current
+ *          piece can no longer move.
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function setPiece() {
    clearCompleteRows();
+
+   // To prevent dis-orientation, keep
+   // the column where the user left it,
+   // otherwise, put the new piece near
+   // the top of the playfield.
    GameData.row = 3;
    GameData.activePiece = generatePiece();
    GameData.activePiece.reset();
@@ -392,20 +538,41 @@ function setPiece() {
    }
 }
 
-//Rotate camera around the Z-axis.
+/*
+ * Purpose: Rotate camera around the Z-axis.
+ *
+ * Parameters: angle(double) -> The angle by which the
+ *                              camera needs to be
+ *                              rotated.
+ *
+ * Returns: None
+ */
 function rotateZAxis(angle) {
+   // Store the current values in temporary buffers
+   // so they can be used when calculating the new
+   // values.
    var tempEyeX = Camera.eyeX;
    var tempEyeY = Camera.eyeY;
    var tempLookX = Camera.upX;
    var tempLookY = Camera.upY;
 
+   // Update the camera's position.
    Camera.eyeX = (Math.cos(angle) * tempEyeX) - (Math.sin(angle) * tempEyeY);
    Camera.eyeY = (Math.sin(angle) * tempEyeX) + (Math.cos(angle) * tempEyeY);
 
+   // Update the camera's up direction.
    Camera.upX = (Math.cos(angle) * tempLookX) - (Math.sin(angle) * tempLookY);
    Camera.upY = (Math.sin(angle) * tempLookX) + (Math.cos(angle) * tempLookY);
 }
 
+/*
+ * Purpose: Generate a new piece for the player to place.
+ *
+ * Parameters: None
+ *
+ * Returns: An integer that represents the new piece
+ *          to be generated.
+ */
 function generatePiece() {
    switch(Math.floor(7 * Math.random() + 1)) {
       case 1:
@@ -425,16 +592,25 @@ function generatePiece() {
    }
 }
 
+/*
+ * Purpose: Determine which rows are complete, and if so,
+ *          drop blocks row by row. Update scores as needed.
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function clearCompleteRows() {
-   // Check for completed rows
-   var lastRow = GameData.forbiddenRow;
+   // Create a buffer to hold which rows are complete
    var completeRows = [];
    var isComplete = true;
    var startRow = 0;
    var droppedRows = 0;
    var rowIndex = 0;
    var columnIndex = 0;
-   for(rowIndex = GameData.mainPlayField.getFieldHeight() - 1; rowIndex > lastRow; rowIndex--) {
+
+   // Check for any completed rows
+   for(rowIndex = GameData.mainPlayField.getFieldHeight() - 1; rowIndex > GameData.forbiddenRow; rowIndex--) {
       isComplete = true;
       for(columnIndex = 0; columnIndex < GameData.mainPlayField.getFieldWidth(); columnIndex++) {
          if(GameData.mainPlayField.getBlockType(rowIndex, columnIndex) === 0) {
@@ -471,6 +647,15 @@ function clearCompleteRows() {
    }
 }
 
+/*
+ * Purpose: Determine if there any blocks in the
+ *          forbidden zone, and if so, end the game.
+ *
+ * Parameters: None
+ *
+ * Returns: A boolean value specifying whether or not
+ *          the game must end.
+ */
 function inForbiddenZone() {
    var rowIndex = 0;
    var columnIndex = 0;
@@ -484,21 +669,64 @@ function inForbiddenZone() {
    return false;
 }
 
+/*
+ * Purpose: Update the user's score based on
+ *          how many lines have been cleared.
+ *
+ * Parameters: numberOfRows(integer) -> The number of rows that have been
+ *                                      completed.
+ *
+ * Returns: None
+ */
 function increaseScore(numberOfRows) {
+   // Update the scores
    GameData.lines += numberOfRows;
    GameData.score += Math.pow(2, numberOfRows - 1);
+
+   // Update the Dom elements so the user knows what their scores are
    DomElement.scoreText.innerHTML = "" + GameData.score;
    DomElement.lineText.innerHTML = "" + GameData.lines;
 }
 
+/*
+ * Purpose: Change the active column to be the column to
+ *          the right of the current column, and wrap-around
+ *          as necessary.
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function incrementColumn() {
    GameData.column = correctColumn(GameData.column++);
 }
 
+/*
+ * Purpose: Change the active column to be the column to
+ *          the left of the current column, and wrap-around
+ *          as necessary.
+ *
+ * Parameters: None
+ *
+ * Returns: None
+ */
 function decrementColumn() {
    GameData.column = correctColumn(GameData.column--);
 }
 
+/*
+ * Purpose: Make sure the column wraps around correctly
+ *          by mapping the current column number into
+ *          the appropriate range. This helps create
+ *          the rotating camera effect.
+ *
+ * Parameters: currentColumn(int) -> The current column, which may need
+ *                                   to be remapped to the appropriate
+ *                                   range.
+ *
+ * Returns: A new column number which is gauranteed to be in the correct
+ *          range.
+ */
 function correctColumn(currentColumn) {
    var correctedColumn = currentColumn;
    while(correctedColumn < 0) {
@@ -510,18 +738,37 @@ function correctColumn(currentColumn) {
    return correctedColumn;
 }
 
+/*
+ * Purpose: Perform the necessary checks and animations to run
+ *          the game.
+ *
+ * Parameters: now(int) -> The time this function is called by
+ *                         requestAnimationFrame, to be used in
+ *                         calculating how much time has passed
+ *                         this function was last called.
+ *
+ * Returns: None, the method simply exits, forcing play to stop.
+ */
 function playGame(now) {
-   if(now - GameData.lastTime >= 1 * 1000) {
-      GameData.lastTime = now;
-      if(canMoveDown()) {
-         moveDown();
-      }else {
-         if(inForbiddenZone()) {
-            return;
+   // Only play the game if not paused
+   if(!GameData.isPaused) {
+      // Check if enough time has passed between moves
+      if(now - GameData.lastTime >= 1000) {
+         GameData.lastTime = now;
+         // When enough time has passed, force the current
+         // piece down
+         if(canMoveDown()) {
+            moveDown();
+         }else {
+            if(inForbiddenZone()) {
+               return;
+            }
+            setPiece();
          }
-         setPiece();
+         // Redraw the playfield, since the piece moved down
+         GameData.mainPlayField.drawField(Graphics.gl);
       }
-      GameData.mainPlayField.drawField(Graphics.gl);
    }
+   // Start the animation process
    requestAnimationFrame(playGame);
 }

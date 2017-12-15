@@ -99,8 +99,7 @@ function CylindricalBlock(startRadius = 0.0, width = 0.0, startAngle = 0.0, bloc
    }
 
    // Start creating the top face. The height of these
-   // points should be this.height. Extract the 4 corner points so 
-   // the side faces can be easily drawn.
+   // points should be this.height.
    for(index = 0; index <= this.meshSize; index++) {
       currentAngle = this.startAngle + (index * deltaAngle);
       startPoint = new CylindricalPoint(this.startRadius, currentAngle, this.startHeight + this.height, this.normalization);
@@ -250,4 +249,8 @@ CylindricalBlock.prototype.setCornerColors = function(newColor) {
       this.colors[4 * index + 2] = newColor.getBlue();
       this.colors[4 * index + 3] = newColor.getAlpha();
    }
+}
+
+CylindricalBlock.prototype.setGradientColors = function(gradientColors) {
+   
 }
