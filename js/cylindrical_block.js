@@ -251,6 +251,10 @@ CylindricalBlock.prototype.setCornerColors = function(newColor) {
    }
 }
 
-CylindricalBlock.prototype.setGradientColors = function(gradientColors) {
-   
+CylindricalBlock.prototype.setMultiColors = function(colorArray) {
+   var index = 0;
+   this.colors = [];
+   for(index = 0; index < colorArray.length; index++) {
+      this.colors.push(colorArray[index]);
+   }
 }

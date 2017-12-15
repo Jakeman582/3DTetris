@@ -39,7 +39,7 @@ var DomElement = {
 var Camera = {
    eyeX: 0,
    eyeY: -30,
-   eyeZ: 18,
+   eyeZ: 20,
    lookX: 0,
    lookY: 0,
    lookZ: 2,
